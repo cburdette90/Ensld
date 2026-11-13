@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a5cad">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ENSLD">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>ENSLD 300-420 Practice Exam</title>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#fff;--ink:#16202b;--muted:#5d6b7a;--line:#dde3ea;
+  --brand:#0a5cad;--brand-ink:#fff;--ok:#1d7f46;--ok-bg:#e6f4ec;--bad:#b42318;--bad-bg:#fdecea;--flag:#b26a00;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f141a;--card:#18202a;--ink:#e7edf3;--muted:#98a6b5;--line:#2a3542;--brand:#4b9be8;--brand-ink:#0b1117;--ok:#5fd08f;--ok-bg:#16301f;--bad:#ff8a80;--bad-bg:#3a1a18;--flag:#f0b44c;}
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:760px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+h1{font-size:1.35rem;margin:4px 0 2px}
+h2{font-size:1.05rem;margin:22px 0 8px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.big{display:block;width:100%;text-align:left;padding:14px}
+.big b{display:block}
+.big span{color:var(--muted);font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+.dom{margin:8px 0}
+.dom .lbl{display:flex;justify-content:space-between;font-size:.88rem}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--brand)}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.top{display:flex;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top);background:var(--bg);padding:8px 0;z-index:2;border-bottom:1px solid var(--line);margin-bottom:12px}
+.timer{font-variant-numeric:tabular-nums;font-weight:600}
+.timer.low{color:var(--bad)}
+.tag{display:inline-block;font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:1px 8px}
+.qtext{font-size:1.05rem;margin:10px 0 14px;white-space:pre-line}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;margin:8px 0;padding:12px}
+.opt .k{font-weight:700;min-width:1.2em}
+.opt.sel{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.explain{border-left:3px solid var(--brand);padding:8px 12px;margin-top:12px;background:var(--card);border-radius:0 8px 8px 0}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)}.verdict.no{color:var(--bad)}
+.nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px;margin-top:10px}
+.nav button{padding:6px 0;font-size:.8rem}
+.nav .ans{background:var(--line)}
+.nav .cur{outline:2px solid var(--brand)}
+.nav .fl{color:var(--flag);font-weight:700}
+.score{font-size:2.2rem;font-weight:700;margin:0}
+.pass{color:var(--ok)}.fail{color:var(--bad)}
+textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal .card{max-width:420px;width:100%}
+.rev{border-top:1px solid var(--line);padding:12px 0}
+.rev:first-child{border-top:0}
+.note{font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<script>
+const DOMAINS = {
+  1:{name:"Advanced Addressing and Routing", w:25, n:15},
+  2:{name:"Advanced Enterprise Campus", w:25, n:15},
+  3:{name:"WAN for Enterprise Networks", w:20, n:12},
+  4:{name:"Network Services", w:20, n:12},
+  5:{name:"Automation", w:10, n:6}
+};
+
+// d=domain, q=question, o=options, a=correct option indexes, e=explanation
+const BANK = [
+// ---------- Domain 1 ----------
+{id:"a1",d:1,q:"You need one summary route for 10.10.16.0/24 through 10.10.23.0/24. Which summary is the most specific that covers all eight networks?",o:["10.10.16.0/21","10.10.16.0/20","10.10.16.0/22","10.10.0.0/19"],a:[0],e:"Eight /24s = 2^3, so borrow back 3 bits: /21. 16 is a multiple of 8, so 10.10.16.0/21 covers .16 through .23 exactly."},
+{id:"a2",d:1,q:"A site is assigned an IPv6 /48. How many /64 subnets can it create?",o:["65,536","256","4,096","16,777,216"],a:[0],e:"64 minus 48 = 16 bits of subnet ID. 2^16 = 65,536 /64 subnets."},
+{id:"a3",d:1,q:"The business wants to enable IPv6 gradually while existing IPv4 applications keep running on the same interfaces, with no translation. Which transition approach fits?",o:["Dual stack","NAT64","6to4 tunneling","ISATAP"],a:[0],e:"Dual stack runs IPv4 and IPv6 side by side on the same hosts and interfaces. It is Cisco's preferred long-term transition approach and needs no translation."},
+{id:"a4",d:1,q:"New IPv6-only clients must reach a legacy IPv4-only server that can't be upgraded. What should the design include?",o:["NAT64 with DNS64","Dual stack on the clients","ISATAP tunnels","Manual 6in4 tunnels"],a:[0],e:"NAT64 translates IPv6 to IPv4, and DNS64 synthesizes AAAA records so IPv6-only clients can resolve the IPv4-only server."},
+{id:"a5",d:1,q:"Which two mechanisms tunnel IPv6 traffic across an IPv4-only infrastructure? (Choose two.)",o:["6to4","ISATAP","NAT64","SLAAC","DHCPv6 prefix delegation"],a:[0,1],e:"6to4 and ISATAP both encapsulate IPv6 in IPv4. NAT64 is translation, not tunneling. SLAAC and DHCPv6-PD are addressing methods."},
+{id:"a6",d:1,q:"A remote OSPF area must not receive external Type 5 LSAs, but a router inside that area redistributes local static routes into OSPF. Which area type fits?",o:["NSSA","Stub area","Totally stubby area","Backbone area"],a:[0],e:"Stub and totally stubby areas can't contain an ASBR. NSSA blocks Type 5 but lets a local ASBR inject externals as Type 7, which the ABR converts to Type 5."},
+{id:"a7",d:1,q:"Which LSA types are blocked from entering a totally stubby OSPF area?",o:["Types 3, 4, and 5 (except a default route)","Type 5 only","Types 4 and 5 only","Types 1 and 2"],a:[0],e:"Totally stubby (Cisco) blocks inter-area (3), ASBR summary (4) and external (5) LSAs. The ABR injects a default route as a Type 3."},
+{id:"a8",d:1,q:"Where can OSPF summarize inter-area routes?",o:["On the ABR","On any internal router","Only on the DR","Only on the ASBR"],a:[0],e:"Inter-area summarization happens on ABRs (area range). External summarization happens on ASBRs (summary-address). That's why a hierarchical addressing plan lines up with area boundaries."},
+{id:"a9",d:1,q:"In a large EIGRP hub-and-spoke design, you want to limit query scope and make sure spokes are never used as transit. What should you configure?",o:["EIGRP stub on the spokes","Summarization on the spokes only","Passive interfaces on the hub","Longer hold timers on the hub"],a:[0],e:"Stub routers aren't queried by the hub and don't advertise learned routes as transit. This bounds the query domain and improves convergence and stability."},
+{id:"a10",d:1,q:"What condition must a route meet to be an EIGRP feasible successor?",o:["Its reported distance is less than the current feasible distance","Its reported distance equals the feasible distance","It has a lower administrative distance","It uses an interface with the same bandwidth"],a:[0],e:"The feasibility condition: neighbor's reported (advertised) distance < current feasible distance. That guarantees a loop-free backup path."},
+{id:"a11",d:1,q:"Which EIGRP feature enables unequal-cost load balancing?",o:["variance","maximum-paths alone","bandwidth-percent","offset-list"],a:[0],e:"variance multiplies the best metric; feasible successors with a metric within that multiple are installed. maximum-paths sets how many paths, but equal cost unless variance is set."},
+{id:"a12",d:1,q:"How do IS-IS area boundaries differ from OSPF area boundaries?",o:["IS-IS boundaries fall on links; each router sits in a single area","IS-IS boundaries fall on routers, like OSPF ABRs","IS-IS has no area concept","IS-IS requires all areas to touch area 0"],a:[0],e:"In IS-IS a router belongs to one area and the boundary sits on the link between L1/L2 routers. In OSPF the ABR itself straddles the boundary."},
+{id:"a13",d:1,q:"What does IS-IS use for transport?",o:["It runs directly over Layer 2 (CLNS), not IP","TCP port 179","UDP port 520","IP protocol 89"],a:[0],e:"IS-IS is encapsulated directly in Layer 2 frames. TCP 179 is BGP, UDP 520 is RIP, IP 89 is OSPF. Not depending on IP is one reason it's popular as an underlay."},
+{id:"a14",d:1,q:"How many iBGP sessions are needed for a full mesh of 10 routers?",o:["45","10","20","90"],a:[0],e:"n(n-1)/2 = 10 x 9 / 2 = 45. That growth is why route reflectors or confederations are used at scale."},
+{id:"a15",d:1,q:"Which design element removes the iBGP full-mesh requirement while keeping a single AS number?",o:["Route reflectors","eBGP multihop","BGP communities","next-hop-self"],a:[0],e:"Route reflectors can re-advertise iBGP routes to clients. Confederations also solve it but split the AS into sub-ASes."},
+{id:"a16",d:1,q:"Your AS has two ISP links on two different edge routers. All internal routers should prefer ISP A for outbound traffic. Which attribute should you set?",o:["Local preference","MED","AS-path prepending","Weight"],a:[0],e:"Local preference is shared across the whole AS via iBGP and controls outbound path choice. Weight is Cisco-only and local to one router."},
+{id:"a17",d:1,q:"You're dual-homed to two different ISPs and want most inbound traffic to arrive via ISP A. Which method is most commonly used?",o:["AS-path prepending toward ISP B","Higher local preference on ISP A routes","Higher weight on ISP A","Lower MED toward ISP B"],a:[0],e:"Prepending makes the path through ISP B look longer to the world. MED is only compared between paths from the same neighbor AS, and local pref/weight affect outbound."},
+{id:"a18",d:1,q:"You have two links to the same provider AS and want to influence which link that provider uses to send traffic to you. Which attribute fits?",o:["MED","Local preference","Weight","Origin"],a:[0],e:"MED is a hint to a directly connected neighbor AS about which entry point to prefer. It's compared when routes come from the same AS."},
+{id:"a19",d:1,q:"Which well-known BGP community stops a route from being advertised to eBGP peers?",o:["no-export","no-advertise","internet","local-AS"],a:[0],e:"no-export keeps the route inside the AS (or confederation). no-advertise stops it from being sent to any peer. local-AS keeps it inside the local sub-AS."},
+{id:"a20",d:1,q:"Two routers do mutual redistribution between OSPF and EIGRP. What's the best practice to avoid routing loops and suboptimal paths?",o:["Tag routes at redistribution and filter on those tags","Raise the AD of every route to 255","Redistribute only connected routes","Turn off split horizon"],a:[0],e:"Tagging routes as they're redistributed, then denying routes carrying the tag when going back the other way, prevents feedback loops at multiple redistribution points."},
+{id:"a21",d:1,q:"Which route source has the lowest default administrative distance?",o:["eBGP","EIGRP internal","OSPF","IS-IS"],a:[0],e:"eBGP 20, EIGRP internal 90, OSPF 110, IS-IS 115, EIGRP external 170, iBGP 200."},
+{id:"a22",d:1,q:"You need sub-second link failure detection that OSPF, EIGRP, and BGP can all use. What should you deploy?",o:["BFD","UDLD","Aggressive hello timers on every protocol","IP SLA"],a:[0],e:"BFD is a lightweight, protocol-independent hello mechanism that multiple routing protocols can register with, giving fast failure detection without tuning each protocol."},
+{id:"a23",d:1,q:"What is the 2-byte private BGP AS number range?",o:["64512 to 65534","1 to 64511","65535 to 65551","4200000000 to 4294967294"],a:[0],e:"64512 to 65534 is the 16-bit private range. 4200000000 to 4294967294 is the 32-bit private range."},
+{id:"a24",d:1,q:"Which IPv6 prefix is reserved for Unique Local Addresses (ULA)?",o:["fc00::/7","fe80::/10","2000::/3","ff00::/8"],a:[0],e:"ULA is fc00::/7 (fd00::/8 in practice). fe80::/10 is link-local, 2000::/3 is global unicast, ff00::/8 is multicast."},
+
+// ---------- Domain 2 ----------
+{id:"b1",d:2,q:"A small single-building campus doesn't need three tiers. Which design is recommended?",o:["Collapsed core (core and distribution combined)","Full three-tier hierarchy","Spine-leaf","Flat Layer 2 with no distribution"],a:[0],e:"A two-tier collapsed core merges core and distribution to cut cost and complexity when the campus is small."},
+{id:"b2",d:2,q:"Which two are benefits of a routed access (Layer 3 access) design? (Choose two.)",o:["No STP needed on access-to-distribution uplinks","Faster convergence with ECMP uplinks","VLANs can span multiple access switches","No IP subnet planning needed","FHRP is required at the access layer"],a:[0,1],e:"Routed access removes STP from the uplinks and uses routing for fast ECMP convergence. The tradeoff is VLANs can't span access switches, and FHRP isn't needed since the access switch is the gateway."},
+{id:"b3",d:2,q:"Which FHRP load-balances across multiple routers using one virtual IP address and multiple virtual MAC addresses?",o:["GLBP","HSRP","VRRP","HSRPv2"],a:[0],e:"GLBP's AVG hands out different virtual MACs to hosts, so several AVFs forward traffic at once for a single gateway IP."},
+{id:"b4",d:2,q:"Which FHRP is an open standard?",o:["VRRP","HSRP","GLBP","None of them"],a:[0],e:"VRRP is IETF standard (RFC 5798). HSRP and GLBP are Cisco proprietary."},
+{id:"b5",d:2,q:"In a Layer 2 access design with HSRP at the distribution layer, where should the STP root bridge for each VLAN be?",o:["On the distribution switch that's HSRP active for that VLAN","On an access switch","On the core switch","On the HSRP standby switch"],a:[0],e:"Aligning STP root with the HSRP active gateway keeps the forwarding path optimal and avoids traffic crossing the inter-distribution link."},
+{id:"b6",d:2,q:"What is the main design benefit of StackWise Virtual (or VSS) at the distribution layer?",o:["Two switches act as one logical switch, so access uplinks use MEC with no STP blocking and no FHRP needed","It doubles the number of VLANs supported","It lets you run OSPF without areas","It replaces the need for a core layer in every design"],a:[0],e:"Multichassis EtherChannel from the access layer gives all links forwarding, simpler topology, and one logical gateway."},
+{id:"b7",d:2,q:"Which feature should be enabled on PortFast access ports to stop a rogue switch from joining the STP topology?",o:["BPDU guard","Root guard","Loop guard","UDLD"],a:[0],e:"BPDU guard err-disables a PortFast port that receives a BPDU. Root guard is used on designated ports where a superior BPDU should never appear."},
+{id:"b8",d:2,q:"Which feature detects one-way links on fiber connections that could cause STP loops?",o:["UDLD","BPDU filter","PortFast","Storm control"],a:[0],e:"UDLD detects unidirectional links (for example, one fiber strand failing) and can err-disable the port in aggressive mode."},
+{id:"b9",d:2,q:"What is Cisco's general guideline for access-to-distribution uplink oversubscription?",o:["20:1","4:1","1:1","50:1"],a:[0],e:"Common guidance is 20:1 for access to distribution and 4:1 for distribution to core."},
+{id:"b10",d:2,q:"Which three protocols make up the SD-Access control, data, and policy planes? (Choose three.)",o:["LISP","VXLAN","Cisco TrustSec (SGT)","OSPF","MPLS"],a:[0,1,2],e:"Control plane: LISP. Data plane: VXLAN. Policy plane: TrustSec with Scalable Group Tags."},
+{id:"b11",d:2,q:"Which SD-Access node connects the fabric to external networks such as the WAN, data center, or internet?",o:["Border node","Edge node","Intermediate node","Extended node"],a:[0],e:"Border nodes are the fabric's gateway to outside networks and translate between fabric and non-fabric context."},
+{id:"b12",d:2,q:"Which SD-Access node keeps the host tracking database that maps endpoints to their fabric locations?",o:["Control plane node","Border node","Edge node","Fabric WLC"],a:[0],e:"The control plane node runs LISP map-server/map-resolver and holds the EID-to-RLOC mappings."},
+{id:"b13",d:2,q:"What does an SD-Access fabric edge node provide to endpoints?",o:["An anycast default gateway","The LISP map-server function","The external handoff to the WAN","The wireless control plane"],a:[0],e:"Every edge node hosts the same anycast gateway IP and MAC per subnet, so hosts can move anywhere in the fabric without changing their gateway."},
+{id:"b14",d:2,q:"How does SD-Access provide macro-segmentation?",o:["Virtual networks (VRFs)","Scalable Group Tags","Private VLANs","Port ACLs"],a:[0],e:"Virtual networks (VRFs) give full routing separation between groups. SGTs handle micro-segmentation inside a VN."},
+{id:"b15",d:2,q:"Within a single SD-Access virtual network, how do you stop two groups of users from talking to each other?",o:["SGT-based group policy (micro-segmentation)","Place them in different VRFs","Use different anycast gateways","Use STP to block the path"],a:[0],e:"Scalable Group Tags with group-based access control policy enforce micro-segmentation within a VN."},
+{id:"b16",d:2,q:"Which routing protocol does Catalyst Center LAN automation use to build the SD-Access underlay?",o:["IS-IS","OSPF","EIGRP","BGP"],a:[0],e:"LAN automation builds a routed IS-IS underlay. You can build your own underlay with OSPF manually, but automation uses IS-IS."},
+{id:"b17",d:2,q:"Branch APs need to switch client traffic locally and keep serving clients if the WAN to the central WLC fails. Which AP mode fits?",o:["FlexConnect","Local mode","Monitor mode","Sniffer mode"],a:[0],e:"FlexConnect allows local switching at the branch and standalone operation if the controller is unreachable. Local mode tunnels all client traffic over CAPWAP."},
+{id:"b18",d:2,q:"Which 2.4 GHz channels are non-overlapping in North America?",o:["1, 6, 11","1, 5, 9, 13","3, 7, 11","1, 4, 8, 11"],a:[0],e:"With 22 MHz channel width and 5 MHz spacing, only 1, 6 and 11 avoid overlap in the US."},
+{id:"b19",d:2,q:"What minimum signal level at the cell edge is commonly recommended for voice-grade WLAN design?",o:["-67 dBm","-80 dBm","-50 dBm","-90 dBm"],a:[0],e:"-67 dBm with about 20% cell overlap is the usual target for voice over WLAN, with SNR of 25 dB or better."},
+{id:"b20",d:2,q:"Guest wireless traffic from internal WLCs must be tunneled to a controller in the DMZ. What is this design called?",o:["Guest anchor (auto-anchor mobility)","FlexConnect local switching","Fabric-enabled wireless","Mesh mode"],a:[0],e:"Foreign controllers tunnel guest traffic to an anchor WLC in the DMZ, keeping guest traffic off the internal network."},
+{id:"b21",d:2,q:"Which pairing lets a dual-supervisor switch fail over without dropping traffic while routing reconverges?",o:["SSO with NSF","HSRP with preemption","UDLD with aggressive mode","STP with PortFast"],a:[0],e:"SSO keeps the standby supervisor in sync. NSF keeps forwarding using the existing FIB while routing protocol adjacencies recover gracefully."},
+{id:"b22",d:2,q:"Where should the QoS trust boundary normally be placed in a campus design?",o:["As close to the endpoint as possible, at the access layer","At the core","At the WAN edge only","At the internet firewall"],a:[0],e:"Classify and mark (or trust trusted devices like IP phones) at the access edge so every downstream hop can act on the markings."},
+{id:"b23",d:2,q:"In SD-Access fabric wireless, how does client data traffic flow?",o:["The AP VXLAN-encapsulates it to the fabric edge; the WLC handles control plane only","It's CAPWAP-tunneled to the WLC, then into the fabric","It's bridged in a single flat VLAN across the fabric","It's sent over GRE to the border node"],a:[0],e:"Fabric APs send data directly into the fabric via VXLAN at the edge node, so wireless gets the same policy and anycast gateway as wired. The WLC stays control plane only."},
+
+// ---------- Domain 3 ----------
+{id:"c1",d:3,q:"Which Catalyst SD-WAN component authenticates WAN edge devices, orchestrates initial control connections, and helps with NAT traversal?",o:["SD-WAN Validator (vBond)","SD-WAN Controller (vSmart)","SD-WAN Manager (vManage)","WAN Edge"],a:[0],e:"The Validator is the orchestration plane: first point of contact, authentication, and NAT discovery."},
+{id:"c2",d:3,q:"Which Catalyst SD-WAN component distributes routes and policy to WAN edges using OMP?",o:["SD-WAN Controller (vSmart)","SD-WAN Validator (vBond)","SD-WAN Manager (vManage)","SD-WAN Analytics"],a:[0],e:"The Controller is the control plane. It acts like a route reflector for OMP and pushes centralized policy."},
+{id:"c3",d:3,q:"Which Catalyst SD-WAN component provides the GUI for configuration, templates, and monitoring?",o:["SD-WAN Manager (vManage)","SD-WAN Controller (vSmart)","SD-WAN Validator (vBond)","WAN Edge"],a:[0],e:"The Manager is the management plane: single pane for config, policy authoring, monitoring and software upgrades."},
+{id:"c4",d:3,q:"What is the role of OMP in Catalyst SD-WAN?",o:["Advertises routes, TLOCs, and service info between controllers and WAN edges","Builds IPsec tunnels between edges","Measures path loss and latency","Authenticates devices to the fabric"],a:[0],e:"OMP runs over the DTLS/TLS control connections and carries OMP routes, TLOC routes and service routes."},
+{id:"c5",d:3,q:"Which three values identify an SD-WAN TLOC? (Choose three.)",o:["System IP","Color","Encapsulation","Site ID","VPN ID"],a:[0,1,2],e:"A TLOC is the tuple of system IP, color and encapsulation (IPsec or GRE)."},
+{id:"c6",d:3,q:"How does SD-WAN application-aware routing measure path quality?",o:["BFD probes over each tunnel measure loss, latency, and jitter","SNMP polling of WAN interfaces","NetFlow export to the Manager","ICMP pings from the Controller"],a:[0],e:"BFD runs on every data plane tunnel, and SLA classes compare those measurements to choose the path for each app."},
+{id:"c7",d:3,q:"Which three technologies make up DMVPN? (Choose three.)",o:["mGRE","NHRP","IPsec","LISP","GDOI"],a:[0,1,2],e:"DMVPN = multipoint GRE + NHRP for address resolution + IPsec for encryption (optional but standard). GDOI belongs to GETVPN."},
+{id:"c8",d:3,q:"Which DMVPN phase supports dynamic spoke-to-spoke tunnels while letting the hub summarize routes to the spokes?",o:["Phase 3","Phase 1","Phase 2","None; summarization always breaks spoke-to-spoke"],a:[0],e:"Phase 3 uses NHRP redirect and shortcut, so the hub can send a summary or default and spokes still build direct tunnels. Phase 2 needs full specific routes on spokes."},
+{id:"c9",d:3,q:"You need to encrypt any-to-any traffic across a private MPLS WAN while keeping the original IP header so provider QoS and routing still work. What fits best?",o:["GETVPN","DMVPN","FlexVPN site-to-site","SSL VPN"],a:[0],e:"GETVPN is tunnel-less group encryption that preserves the original IP header, ideal over a private any-to-any MPLS cloud. It isn't suited to the internet because of private addressing."},
+{id:"c10",d:3,q:"Which protocol does GETVPN use to distribute keys from the key server to group members?",o:["GDOI","IKEv2","NHRP","LDP"],a:[0],e:"Group Domain of Interpretation (GDOI) delivers the group SA and keys from key servers to group members."},
+{id:"c11",d:3,q:"In an MPLS Layer 3 VPN, which value makes overlapping customer prefixes unique in MP-BGP?",o:["Route distinguisher","Route target","MPLS label","VRF name"],a:[0],e:"The RD is prepended to the IPv4 prefix to create a unique VPNv4 prefix. It does not control import or export."},
+{id:"c12",d:3,q:"In an MPLS Layer 3 VPN, what controls which VRFs import a given VPN route?",o:["Route target","Route distinguisher","Site of origin","Next hop"],a:[0],e:"Route targets are extended communities. Export RT tags the route; a VRF imports routes carrying a matching import RT. This is how extranets and hub-and-spoke VPNs are built."},
+{id:"c13",d:3,q:"Which Metro Ethernet service type is point-to-point?",o:["E-Line","E-LAN","E-Tree","E-Access"],a:[0],e:"E-Line = point-to-point (EPL/EVPL). E-LAN = multipoint-to-multipoint. E-Tree = rooted multipoint (hub and spoke)."},
+{id:"c14",d:3,q:"Which branch WAN design gives the highest availability?",o:["Dual routers with dual carriers","Single router with dual carriers","Dual routers with one carrier","Single router with one carrier and LTE backup"],a:[0],e:"Dual router, dual carrier removes both the device and the provider as single points of failure."},
+{id:"c15",d:3,q:"Which Catalyst SD-WAN feature picks the best path (local internet or backhaul) to apps like Microsoft 365 based on measured performance?",o:["Cloud OnRamp for SaaS","Cloud OnRamp for IaaS","Centralized data policy only","TLOC extension"],a:[0],e:"Cloud OnRamp for SaaS probes SaaS apps over each available exit and steers traffic to the best one."},
+{id:"c16",d:3,q:"FlexVPN is built on which key exchange protocol?",o:["IKEv2","IKEv1","GDOI","ISAKMP aggressive mode"],a:[0],e:"FlexVPN unifies site-to-site, hub-and-spoke and remote access on IKEv2."},
+{id:"c17",d:3,q:"What does VPLS provide?",o:["A multipoint Layer 2 emulated LAN over MPLS","A point-to-point Layer 3 VPN","A routed IPsec overlay","A Layer 3 multicast VPN only"],a:[0],e:"VPLS makes the provider network look like one big switch to the customer sites, with MAC learning done by the PEs."},
+
+// ---------- Domain 4 ----------
+{id:"d1",d:4,q:"Which DSCP value is recommended for voice bearer traffic?",o:["EF (46)","AF41 (34)","CS3 (24)","AF21 (18)"],a:[0],e:"Voice RTP is marked EF (46) and placed in the priority queue. CS3 is commonly used for call signaling."},
+{id:"d2",d:4,q:"Per RFC 4594 based guidance, which DSCP is used for interactive video (multimedia conferencing)?",o:["AF41","EF","CS1","AF11"],a:[0],e:"Multimedia conferencing uses AF41. Real-time interactive (like TelePresence) uses CS4. Scavenger is CS1."},
+{id:"d3",d:4,q:"Which DSCP marking is used for scavenger (less than best effort) traffic?",o:["CS1","CS0","AF11","CS2"],a:[0],e:"Scavenger is CS1 and gets a small, deprioritized queue. CS0 is default best effort."},
+{id:"d4",d:4,q:"What queuing method gives voice strict priority while preventing it from starving other classes?",o:["LLQ (strict priority queue with an implicit policer)","FIFO","WFQ alone","Custom queuing"],a:[0],e:"LLQ adds a strict priority queue to CBWFQ. The priority queue is policed during congestion so it can't starve other classes."},
+{id:"d5",d:4,q:"Which statement about traffic shaping is true?",o:["It buffers excess traffic and smooths it out, and is applied outbound","It drops or re-marks excess traffic immediately","It only works inbound","It never adds delay"],a:[0],e:"Shaping queues excess traffic (adding delay) to conform to a rate. Policing drops or re-marks. Shaping is common on WAN links to a sub-rate service."},
+{id:"d6",d:4,q:"What problem does WRED mainly solve?",o:["TCP global synchronization from tail drop","Voice jitter","Multicast flooding","Routing loops"],a:[0],e:"WRED randomly drops packets before the queue fills, with lower-priority markings dropped first, so TCP flows don't all back off and ramp up together."},
+{id:"d7",d:4,q:"What is the commonly cited one-way latency target for voice?",o:["150 ms or less","300 ms or less","50 ms or less","500 ms or less"],a:[0],e:"Voice targets: one-way latency 150 ms or less, jitter 30 ms or less, loss 1% or less."},
+{id:"d8",d:4,q:"An app has many senders who are also receivers in the same group (many-to-many). Which PIM mode scales best?",o:["PIM-BIDIR","PIM-SSM","PIM-DM","PIM-SM with SPT switchover"],a:[0],e:"Bidirectional PIM uses a shared tree only, so routers keep (*,G) state instead of (S,G) per source."},
+{id:"d9",d:4,q:"Receivers know the source address of a one-to-many video stream. Which multicast design avoids needing an RP?",o:["PIM-SSM with IGMPv3","PIM-SM with Auto-RP","PIM-BIDIR","PIM-DM"],a:[0],e:"SSM builds (S,G) trees straight to the source. IGMPv3 (or MLDv2) lets hosts specify the source."},
+{id:"d10",d:4,q:"What is the default IPv4 address range for Source-Specific Multicast?",o:["232.0.0.0/8","239.0.0.0/8","224.0.0.0/24","233.0.0.0/8"],a:[0],e:"232.0.0.0/8 is reserved for SSM. 239/8 is administratively scoped, 224.0.0.0/24 is link-local, 233/8 is GLOP."},
+{id:"d11",d:4,q:"How do you get RP redundancy and load sharing with multiple routers using the same RP address?",o:["Anycast RP with MSDP (or PIM Anycast RP)","Auto-RP with one mapping agent","A static RP on each router pointing to different IPs","PIM dense mode fallback"],a:[0],e:"Anycast RP puts the same address on several RPs. Routing sends each router to the closest one, and MSDP (or PIM anycast RP) syncs source info between them."},
+{id:"d12",d:4,q:"What stops a Layer 2 switch from flooding multicast to every port in a VLAN?",o:["IGMP snooping","PIM snooping on routers only","Storm control","Port security"],a:[0],e:"IGMP snooping listens to joins and leaves and forwards multicast only to ports with interested receivers."},
+{id:"d13",d:4,q:"What is the purpose of the multicast RPF check?",o:["Make sure packets arrive on the interface that leads back toward the source, preventing loops","Encrypt multicast traffic","Elect the DR","Assign multicast addresses"],a:[0],e:"Reverse Path Forwarding drops multicast that arrives on a non-RPF interface, which prevents loops and duplicates."},
+{id:"d14",d:4,q:"Which SNMP option gives both authentication and encryption?",o:["SNMPv3 authPriv","SNMPv3 authNoPriv","SNMPv2c","SNMPv3 noAuthNoPriv"],a:[0],e:"authPriv authenticates (SHA) and encrypts (AES). v2c uses cleartext community strings."},
+{id:"d15",d:4,q:"Which IETF standard flow export protocol is based on NetFlow v9?",o:["IPFIX","sFlow","SPAN","RMON"],a:[0],e:"IPFIX (RFC 7011) evolved from NetFlow v9 and uses flexible templates."},
+{id:"d16",d:4,q:"Which open standard mechanism dynamically distributes RP information in PIM-SM?",o:["BSR","Auto-RP","MSDP","IGMP"],a:[0],e:"Bootstrap Router (BSR) is standards based (RFC 5059). Auto-RP is Cisco proprietary. MSDP shares source info between RPs."},
+
+// ---------- Domain 5 ----------
+{id:"e1",d:5,q:"What is YANG?",o:["A data modeling language","A transport protocol","An encoding format like JSON","A config management tool"],a:[0],e:"YANG defines the structure of config and operational data. NETCONF, RESTCONF and gNMI carry data that follows those models."},
+{id:"e2",d:5,q:"What does NETCONF use for transport by default?",o:["SSH on TCP 830","HTTPS on TCP 443","gRPC on TCP 57400","SNMP on UDP 161"],a:[0],e:"NETCONF runs over SSH (RFC 6242) on port 830 and uses XML encoding."},
+{id:"e3",d:5,q:"Which statement about RESTCONF is true?",o:["It uses HTTPS and supports JSON or XML encoding","It only supports XML","It runs over SSH port 830","It doesn't use YANG models"],a:[0],e:"RESTCONF exposes YANG-modeled data through HTTP methods over HTTPS, encoded in JSON or XML."},
+{id:"e4",d:5,q:"Which NETCONF datastore lets you stage changes before committing them to the running config?",o:["Candidate","Startup","Running","Operational"],a:[0],e:"The candidate datastore holds changes until a commit, which supports validation and all-or-nothing changes."},
+{id:"e5",d:5,q:"Which RESTCONF HTTP method merges a partial change into existing config?",o:["PATCH","PUT","POST","GET"],a:[0],e:"PATCH merges. PUT replaces the target resource. POST creates a new resource. GET reads."},
+{id:"e6",d:5,q:"What is the main advantage of model-driven telemetry over SNMP polling?",o:["Devices push structured data as a stream, which is more efficient and closer to real time","It works without any network connectivity","It needs no data models","It only works on IOS 12.x"],a:[0],e:"Push-based streaming of YANG-modeled data scales better and gives finer granularity than periodic polling."},
+{id:"e7",d:5,q:"gNMI is built on which framework?",o:["gRPC (HTTP/2 with protocol buffers)","SSH with XML","SNMP with MIBs","Syslog over UDP"],a:[0],e:"gNMI uses gRPC, which runs over HTTP/2 and typically encodes with protobuf, for both config and streaming telemetry."},
+{id:"e8",d:5,q:"Which set of YANG models is vendor neutral and maintained by network operators?",o:["OpenConfig","Cisco native models","IETF MIBs","Cisco IOS XE CLI models"],a:[0],e:"OpenConfig models are vendor neutral. Cisco native models expose platform-specific features. IETF also publishes standard YANG models."},
+{id:"e9",d:5,q:"You want to know immediately when an interface goes down without streaming its state every few seconds. Which telemetry subscription type fits?",o:["On-change","Periodic at 1 second","Periodic at 60 seconds","SNMP trap only"],a:[0],e:"On-change sends an update only when the value changes, which is ideal for state like interface up/down."},
+{id:"e10",d:5,q:"What is dial-out telemetry?",o:["The device starts the session and pushes data to the collector","The collector starts the session and subscribes","The device sends SNMP traps","The collector polls via NETCONF get"],a:[0],e:"Dial-out: config on the device tells it where to send data. Dial-in: the collector connects and requests a subscription (as with gNMI)."}
+];
+
+// ---------- storage (fail-safe) ----------
+const KEY="ensld-practice-v1", SKEY="ensld-session-v1";
+let mem = {stats:{}, exams:[]};
+function load(){ try{ const r=localStorage.getItem(KEY); if(r){ const p=JSON.parse(r); mem={stats:p.stats||{},exams:p.exams||[]}; } }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(mem)); }catch(e){} }
+function saveSession(){ try{ if(S) localStorage.setItem(SKEY, JSON.stringify(S)); else localStorage.removeItem(SKEY);}catch(e){} }
+function loadSession(){ try{ const r=localStorage.getItem(SKEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
+load();
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const byId=Object.fromEntries(BANK.map(q=>[q.id,q]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const L="ABCDEFGH";
+function record(id, ok){ const s=mem.stats[id]||{s:0,c:0,w:false}; s.s++; if(ok)s.c++; s.w=!ok; mem.stats[id]=s; }
+function missedIds(){ return BANK.filter(q=>mem.stats[q.id]&&mem.stats[q.id].w).map(q=>q.id); }
+function domainStats(d){ let s=0,c=0,seen=0; BANK.filter(q=>q.d==d).forEach(q=>{const t=mem.stats[q.id]; if(t){s+=t.s;c+=t.c;seen++;}}); return {pct:s?Math.round(c/s*100):null,seen,total:BANK.filter(q=>q.d==d).length}; }
+function makeItem(id){ return {id, order:shuffle(byId[id].o.map((_,i)=>i))}; }
+function isRight(id, sel){ const a=byId[id].a; return sel && sel.length===a.length && a.every(x=>sel.includes(x)); }
+
+let S=null; // active session
+let timerH=null;
+
+// ---------- start modes ----------
+function startExam(){
+  let ids=[];
+  for(const d in DOMAINS){ ids=ids.concat(shuffle(BANK.filter(q=>q.d==d).map(q=>q.id)).slice(0,DOMAINS[d].n)); }
+  ids=shuffle(ids);
+  S={mode:"exam",items:ids.map(makeItem),i:0,ans:{},flags:{},checked:{},endAt:Date.now()+90*60*1000,title:"Full exam"};
+  saveSession(); render();
+}
+function startPractice(ids,title){
+  if(!ids.length){ showModal("Nothing to practice here yet.",[["OK",closeModal]]); return; }
+  S={mode:"practice",items:shuffle(ids).map(makeItem),i:0,ans:{},flags:{},checked:{},title};
+  saveSession(); render();
+}
+function quick(){ startPractice(shuffle(BANK.map(q=>q.id)).slice(0,20),"Quick practice"); }
+function drill(d){ startPractice(BANK.filter(q=>q.d==d).map(q=>q.id),DOMAINS[d].name); }
+function missed(){ startPractice(missedIds(),"Missed questions"); }
+
+// ---------- modal ----------
+function showModal(msg,btns){
+  $("#modal").innerHTML=`<div class="modal"><div class="card"><p>${msg}</p><div class="row" style="justify-content:flex-end">${btns.map((b,i)=>`<button data-i="${i}" class="${i===btns.length-1?'primary':''}">${b[0]}</button>`).join("")}</div></div></div>`;
+  $("#modal").querySelectorAll("button").forEach(b=>b.onclick=()=>btns[+b.dataset.i][1]());
+}
+function closeModal(){ $("#modal").innerHTML=""; }
+
+// ---------- render ----------
+function render(){
+  clearInterval(timerH);
+  if(!S) return renderHome();
+  if(S.done) return renderResults();
+  renderQuestion();
+}
+
+function renderHome(){
+  const m=missedIds().length;
+  const last=mem.exams.slice(-5).reverse();
+  $("#app").innerHTML=`
+  <h1>ENSLD 300-420 Practice</h1>
+  <p class="sub">Designing Cisco Enterprise Networks v1.1 &middot; ${BANK.length} questions &middot; weighted to Cisco's blueprint</p>
+  <div class="grid">
+    <button class="big primary" id="bExam"><b>Full practice exam</b><span style="color:inherit;opacity:.85">60 questions &middot; 90 min timer &middot; scored at the end</span></button>
+    <button class="big" id="bQuick"><b>Quick practice</b><span>20 random questions, answers shown as you go</span></button>
+    <button class="big" id="bMiss" ${m?"":"disabled"}><b>Missed questions</b><span>${m} to review</span></button>
+  </div>
+  <h2>Drill a domain</h2>
+  <div class="card">${Object.entries(DOMAINS).map(([d,x])=>{const st=domainStats(d);return `
+    <div class="dom"><div class="lbl"><span><a href="#" data-d="${d}">${d}.0 ${x.name}</a> <span class="tag">${x.w}%</span></span><span class="muted">${st.pct===null?"not started":st.pct+"% &middot; "+st.seen+"/"+st.total+" seen"}</span></div>
+    <div class="bar"><i style="width:${st.pct||0}%"></i></div></div>`}).join("")}
+    <p class="note">Tap a domain to drill every question in it.</p>
+  </div>
+  ${last.length?`<h2>Recent exams</h2><div class="card">${last.map(x=>`<div class="row small"><span>${new Date(x.t).toLocaleDateString()}</span><span class="spacer"></span><b class="${x.p>=80?'pass':'fail'}">${x.p}%</b><span class="muted">${x.c}/${x.n}</span></div>`).join("")}</div>`:""}
+  <h2>Your data</h2>
+  <div class="card small">
+    <p class="muted" style="margin-top:0">Progress saves in this browser only. Copy a backup now and then so you don't lose it.</p>
+    <div class="row"><button id="bBackup">Backup / restore</button><button id="bReset">Reset stats</button></div>
+  </div>
+  <p class="note">Cisco doesn't publish a pass mark. Aim for 80%+ here before booking. Questions are original study material, not exam dumps.</p>`;
+  $("#bExam").onclick=startExam; $("#bQuick").onclick=quick; $("#bMiss").onclick=missed;
+  document.querySelectorAll("[data-d]").forEach(a=>a.onclick=e=>{e.preventDefault();drill(a.dataset.d);});
+  $("#bBackup").onclick=renderBackup;
+  $("#bReset").onclick=()=>showModal("Clear all stats and exam history?",[["Cancel",closeModal],["Clear",()=>{mem={stats:{},exams:[]};save();closeModal();render();}]]);
+}
+
+function renderBackup(){
+  $("#app").innerHTML=`
+  <div class="top"><button id="bBack">&larr; Back</button><b>Backup / restore</b></div>
+  <div class="card"><b>Backup</b><p class="small muted">Copy this text and keep it somewhere (notes app, email to yourself).</p>
+  <textarea id="out" readonly>${esc(JSON.stringify(mem))}</textarea>
+  <div class="row"><button id="bCopy" class="primary">Copy</button><span id="cmsg" class="small muted"></span></div></div>
+  <div class="card"><b>Restore</b><p class="small muted">Paste a backup here. This replaces your current stats.</p>
+  <textarea id="in" placeholder="Paste backup text"></textarea>
+  <div class="row"><button id="bRestore" class="primary">Restore</button><span id="rmsg" class="small"></span></div></div>`;
+  $("#bBack").onclick=render;
+  $("#bCopy").onclick=async()=>{ const t=$("#out"); try{ await navigator.clipboard.writeText(t.value); $("#cmsg").textContent="Copied."; }catch(e){ t.select(); $("#cmsg").textContent="Selected. Copy it manually."; } };
+  $("#bRestore").onclick=()=>{ try{ const p=JSON.parse($("#in").value); if(!p||typeof p.stats!=="object") throw 0; mem={stats:p.stats,exams:p.exams||[]}; save(); $("#rmsg").textContent="Restored."; $("#rmsg").className="small pass"; }catch(e){ $("#rmsg").textContent="That doesn't look like a valid backup."; $("#rmsg").className="small fail"; } };
+}
+
+function fmt(ms){ ms=Math.max(0,ms); const m=Math.floor(ms/60000), s=Math.floor(ms%60000/1000); return m+":"+String(s).padStart(2,"0"); }
+
+function renderQuestion(){
+  const it=S.items[S.i], q=byId[it.id], sel=S.ans[S.i]||[], multi=q.a.length>1, checked=S.checked[S.i];
+  const exam=S.mode==="exam";
+  const answered=Object.keys(S.ans).filter(k=>S.ans[k]&&S.ans[k].length).length;
+  $("#app").innerHTML=`
+  <div class="top">
+    <button id="bQuit">&times;</button>
+    <span class="small"><b>${S.i+1}</b> / ${S.items.length}</span>
+    <span class="spacer"></span>
+    ${exam?`<span class="timer" id="tmr"></span>`:`<span class="small muted">${esc(S.title)}</span>`}
+  </div>
+  <span class="tag">${q.d}.0 ${DOMAINS[q.d].name}</span> ${multi?`<span class="tag">Choose ${q.a.length}</span>`:""}
+  <div class="qtext">${esc(q.q)}</div>
+  <div id="opts">${it.order.map((oi,k)=>{
+    let cls="opt";
+    if(sel.includes(oi)) cls+=" sel";
+    if(checked){ if(q.a.includes(oi)) cls+=" right"; else if(sel.includes(oi)) cls+=" wrong"; }
+    return `<button class="${cls}" data-oi="${oi}" ${checked?"disabled":""}><span class="k">${L[k]}</span><span>${esc(q.o[oi])}</span></button>`;}).join("")}</div>
+  ${checked?`<div class="explain"><span class="verdict ${isRight(it.id,sel)?'ok':'no'}">${isRight(it.id,sel)?"Correct.":"Not quite."}</span> ${esc(q.e)}</div>`:""}
+  <div class="row" style="margin-top:14px">
+    ${exam?`<button id="bPrev" ${S.i?"":"disabled"}>Prev</button><button id="bFlag">${S.flags[S.i]?"Unflag":"Flag"}</button><span class="spacer"></span>
+      ${S.i<S.items.length-1?`<button id="bNext" class="primary">Next</button>`:`<button id="bSubmit" class="primary">Submit exam</button>`}`
+    :`<span class="spacer"></span>${checked?(S.i<S.items.length-1?`<button id="bNext" class="primary">Next</button>`:`<button id="bFinish" class="primary">Finish</button>`):`<button id="bCheck" class="primary" ${sel.length===q.a.length?"":"disabled"}>Check</button>`}`}
+  </div>
+  ${exam?`<div class="card small"><div class="row"><span class="muted">${answered} answered &middot; ${Object.values(S.flags).filter(Boolean).length} flagged</span><span class="spacer"></span><button id="bSub2">Submit</button></div>
+    <div class="nav">${S.items.map((_,k)=>`<button data-j="${k}" class="${(S.ans[k]&&S.ans[k].length)?'ans':''} ${k===S.i?'cur':''} ${S.flags[k]?'fl':''}">${k+1}${S.flags[k]?"*":""}</button>`).join("")}</div></div>`:""}
+  `;
+  $("#bQuit").onclick=()=>showModal(exam?"Leave this exam? Progress on it will be lost.":"End this practice session?",[["Stay",closeModal],["Leave",()=>{S=null;saveSession();closeModal();render();}]]);
+  if(!checked) document.querySelectorAll("#opts .opt").forEach(b=>b.onclick=()=>{
+    const oi=+b.dataset.oi; let cur=(S.ans[S.i]||[]).slice();
+    if(multi){ cur=cur.includes(oi)?cur.filter(x=>x!==oi):(cur.length<q.a.length?[...cur,oi]:cur); } else cur=[oi];
+    S.ans[S.i]=cur; saveSession(); renderQuestion();
+  });
+  const go=j=>{S.i=j;saveSession();renderQuestion();window.scrollTo(0,0);};
+  if($("#bNext")) $("#bNext").onclick=()=>go(S.i+1);
+  if($("#bPrev")) $("#bPrev").onclick=()=>go(S.i-1);
+  if($("#bFlag")) $("#bFlag").onclick=()=>{S.flags[S.i]=!S.flags[S.i];saveSession();renderQuestion();};
+  if($("#bCheck")) $("#bCheck").onclick=()=>{S.checked[S.i]=true; record(it.id,isRight(it.id,sel)); save(); saveSession(); renderQuestion();};
+  if($("#bFinish")) $("#bFinish").onclick=finish;
+  const sub=()=>{ const un=S.items.length-answered; showModal(un?`${un} question${un>1?"s are":" is"} unanswered. Submit anyway?`:"Submit your exam?",[["Keep going",closeModal],["Submit",()=>{closeModal();finish();}]]); };
+  if($("#bSubmit")) $("#bSubmit").onclick=sub;
+  if($("#bSub2")) $("#bSub2").onclick=sub;
+  document.querySelectorAll(".nav [data-j]").forEach(b=>b.onclick=()=>go(+b.dataset.j));
+  if(exam){
+    const tick=()=>{ const left=S.endAt-Date.now(); const t=$("#tmr"); if(t){ t.textContent=fmt(left); t.classList.toggle("low",left<5*60000);} if(left<=0){ clearInterval(timerH); finish(); } };
+    tick(); timerH=setInterval(tick,1000);
+  }
+}
+
+function finish(){
+  clearInterval(timerH);
+  const per={}; let c=0;
+  S.items.forEach((it,k)=>{
+    const q=byId[it.id], ok=isRight(it.id,S.ans[k]);
+    if(S.mode==="exam") record(it.id,ok);
+    else if(!S.checked[k]) return;
+    per[q.d]=per[q.d]||{c:0,n:0}; per[q.d].n++; if(ok){per[q.d].c++;c++;}
+  });
+  const n=Object.values(per).reduce((a,b)=>a+b.n,0);
+  S.result={c,n,p:n?Math.round(c/n*100):0,per};
+  if(S.mode==="exam") mem.exams.push({t:Date.now(),c,n,p:S.result.p});
+  save(); S.done=true; saveSession(); render(); window.scrollTo(0,0);
+}
+
+function renderResults(){
+  const r=S.result; let wrongOnly=S.wrongOnly??true;
+  const list=S.items.map((it,k)=>({it,k})).filter(({it,k})=>S.mode==="exam"||S.checked[k]).filter(({it,k})=>!wrongOnly||!isRight(it.id,S.ans[k]));
+  $("#app").innerHTML=`
+  <div class="top"><button id="bHome">&larr; Home</button><b>${esc(S.title)} results</b></div>
+  <div class="card"><p class="score ${r.p>=80?'pass':'fail'}">${r.p}%</p><p class="muted" style="margin:0">${r.c} of ${r.n} correct${S.mode==="exam"?" &middot; target 80%+":""}</p></div>
+  <div class="card">${Object.entries(r.per).sort().map(([d,x])=>{const p=Math.round(x.c/x.n*100);return `
+    <div class="dom"><div class="lbl"><span>${d}.0 ${DOMAINS[d].name}</span><span class="${p>=80?'pass':'fail'}">${x.c}/${x.n} &middot; ${p}%</span></div><div class="bar"><i style="width:${p}%"></i></div></div>`}).join("")}</div>
+  <div class="row"><h2 style="margin:12px 0">Review</h2><span class="spacer"></span><button id="bToggle">${wrongOnly?"Show all":"Show missed only"}</button></div>
+  <div class="card">${list.length?list.map(({it,k})=>{const q=byId[it.id], sel=S.ans[k]||[], ok=isRight(it.id,sel);
+    return `<div class="rev"><div class="small muted">Q${k+1} &middot; ${q.d}.0 ${DOMAINS[q.d].name}</div>
+    <div style="margin:4px 0 6px"><b>${esc(q.q)}</b></div>
+    <div class="small">Your answer: <span class="${ok?'pass':'fail'}">${sel.length?sel.map(i=>esc(q.o[i])).join("; "):"(none)"}</span></div>
+    ${ok?"":`<div class="small">Correct: <span class="pass">${q.a.map(i=>esc(q.o[i])).join("; ")}</span></div>`}
+    <div class="small muted" style="margin-top:4px">${esc(q.e)}</div></div>`}).join(""):`<p class="muted">Nothing missed. Nice.</p>`}</div>
+  <div class="row"><button id="bAgain" class="primary">${S.mode==="exam"?"New exam":"Practice again"}</button></div>`;
+  $("#bHome").onclick=()=>{S=null;saveSession();render();};
+  $("#bToggle").onclick=()=>{S.wrongOnly=!wrongOnly;renderResults();};
+  $("#bAgain").onclick=()=>{ const m=S.mode, ids=S.items.map(i=>i.id), t=S.title; S=null; if(m==="exam") startExam(); else startPractice(ids,t); };
+}
+
+// resume an in-progress session after refresh
+S=loadSession();
+if(S && S.mode==="exam" && !S.done && Date.now()>S.endAt){ finish(); }
+render();
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
+</body>
+</html>
