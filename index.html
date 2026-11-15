@@ -716,15 +716,15 @@ function renderHome(){
   <h1>ENSLD 300-420 Practice</h1>
   <p class="sub">Designing Cisco Enterprise Networks v1.1 &middot; ${BANK.length} questions (${BANK.filter(q=>q.h).length} hard scenarios) &middot; weighted to Cisco's blueprint</p>
   <div class="grid">
-    <button class="big primary" id="bExam"><b>Full practice exam</b><span style="color:inherit;opacity:.85">60 questions &middot; 90 min &middot; mostly hard scenarios${mem.strict!==false?" &middot; no going back":""}</span></button>
+    <button class="big primary" id="bExam"><b>Full practice exam</b><span style="color:inherit;opacity:.85">60 questions &middot; ${mem.strict!==false?"90 min":"study mode, no timer"} &middot; mostly hard scenarios${mem.strict!==false?" &middot; no going back":""}</span></button>
     <button class="big" id="bHard"><b>Hard scenarios</b><span>Design scenarios, choose-two, and drag-and-drop style matching</span></button>
-    <button class="big" id="bMini"><b>5-question test</b><span>Timed (8 min), scored at the end, unseen first</span></button>
+    <button class="big" id="bMini"><b>5-question test</b><span>${mem.strict!==false?"Timed (8 min), scored at the end":"No timer, answers as you go"}, unseen first</span></button>
     <button class="big" id="bQuick"><b>Quick practice</b><span>${mem.size?mem.size+" questions":"Every question"}, unseen first, answers shown as you go</span></button>
     <button class="big" id="bMiss" ${m?"":"disabled"}><b>Missed questions</b><span>${m} to review${m&&mem.size&&m>mem.size?" &middot; "+mem.size+" at a time":""}</span></button>
   </div>
-  <h2>Exam rules</h2>
-  <div class="card"><div class="chips" id="rules"><button data-r="1" class="${mem.strict!==false?'on':''}">Cisco style</button><button data-r="0" class="${mem.strict===false?'on':''}">Allow review</button></div>
-  <p class="note" style="margin-bottom:0">Cisco style matches the real exam: one question at a time, no going back, no flags. Allow review lets you move around and check each answer as you go. Applies to the full exam and the 5-question test.</p></div>
+  <h2>Exam mode</h2>
+  <div class="card"><div class="chips" id="rules"><button data-r="1" class="${mem.strict!==false?'on':''}">Cisco style</button><button data-r="0" class="${mem.strict===false?'on':''}">Study</button></div>
+  <p class="note" style="margin-bottom:0">Cisco style matches the real exam: one question at a time, no going back, no flags. Study has no timer, lets you move around, and shows the answer and explanation after each question. Applies to the full exam and the 5-question test.</p></div>
   <h2>Questions per practice session</h2>
   <div class="card"><div class="chips" id="sizes">${SIZES.map(n=>`<button data-n="${n}" class="${(mem.size||0)===n?'on':''}">${sizeLbl(n)}</button>`).join("")}</div>
   <p class="note" style="margin-bottom:0">Applies to quick practice, domain drills, and missed questions. Questions you haven't seen come first, then ones you missed.</p></div>
@@ -767,14 +767,14 @@ function fmt(ms){ ms=Math.max(0,ms); const m=Math.floor(ms/60000), s=Math.floor(
 
 function renderQuestion(){
   const it=S.items[S.i], q=byId[it.id], sel=S.ans[S.i]||[], match=q.t==="m", multi=!match&&q.a.length>1, checked=S.checked[S.i];
-  const exam=S.mode==="exam", strict=exam&&S.strict;
+  const exam=S.mode==="exam", strict=exam&&S.strict, study=exam&&!S.strict;
   const answered=S.items.filter((_,k)=>started(k)).length;
   $("#app").innerHTML=`
   <div class="top">
     <button id="bQuit">&times;</button>
     <span class="small"><b>${S.i+1}</b> / ${S.items.length}</span>
     <span class="spacer"></span>
-    ${exam?`<span class="timer" id="tmr"></span>`:`<span class="small muted">${esc(S.title)}</span>`}
+    ${exam&&!study?`<span class="timer" id="tmr"></span>`:`<span class="small muted">${esc(S.title)}</span>`}
   </div>
   <span class="tag">${q.d}.0 ${DOMAINS[q.d].name}</span> ${multi?`<span class="tag">Choose ${q.a.length}</span>`:""}${match?`<span class="tag">Match each item</span>`:""}
   <div class="qtext">${qhtml(q.q)}</div>
@@ -816,7 +816,7 @@ function renderQuestion(){
   if($("#bSubmit")) $("#bSubmit").onclick=sub;
   if($("#bSub2")) $("#bSub2").onclick=sub;
   document.querySelectorAll(".nav [data-j]").forEach(b=>b.onclick=()=>go(+b.dataset.j));
-  if(exam){
+  if(exam&&!study){
     const tick=()=>{ const left=S.endAt-Date.now(); const t=$("#tmr"); if(t){ t.textContent=fmt(left); t.classList.toggle("low",left<5*60000);} if(left<=0){ clearInterval(timerH); finish(); } };
     tick(); timerH=setInterval(tick,1000);
   }
@@ -861,7 +861,7 @@ function renderResults(){
 
 // resume an in-progress session after refresh
 S=loadSession();
-if(S && S.mode==="exam" && !S.done && Date.now()>S.endAt){ finish(); }
+if(S && S.mode==="exam" && !S.done && !(S.study||S.strict===false) && Date.now()>S.endAt){ finish(); }
 render();
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
