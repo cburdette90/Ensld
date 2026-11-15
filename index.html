@@ -724,7 +724,7 @@ function renderHome(){
   </div>
   <h2>Exam rules</h2>
   <div class="card"><div class="chips" id="rules"><button data-r="1" class="${mem.strict!==false?'on':''}">Cisco style</button><button data-r="0" class="${mem.strict===false?'on':''}">Allow review</button></div>
-  <p class="note" style="margin-bottom:0">Cisco style matches the real exam: one question at a time, no going back, no flags. Applies to the full exam and the 5-question test.</p></div>
+  <p class="note" style="margin-bottom:0">Cisco style matches the real exam: one question at a time, no going back, no flags. Allow review lets you move around and check each answer as you go. Applies to the full exam and the 5-question test.</p></div>
   <h2>Questions per practice session</h2>
   <div class="card"><div class="chips" id="sizes">${SIZES.map(n=>`<button data-n="${n}" class="${(mem.size||0)===n?'on':''}">${sizeLbl(n)}</button>`).join("")}</div>
   <p class="note" style="margin-bottom:0">Applies to quick practice, domain drills, and missed questions. Questions you haven't seen come first, then ones you missed.</p></div>
@@ -788,7 +788,8 @@ function renderQuestion(){
   ${checked?`<div class="explain"><span class="verdict ${isRight(it.id,sel)?'ok':'no'}">${isRight(it.id,sel)?"Correct.":"Not quite."}</span> ${esc(q.e)}</div>`:""}
   <div class="row" style="margin-top:14px">
     ${exam?`${strict?"":`<button id="bPrev" ${S.i?"":"disabled"}>Prev</button><button id="bFlag">${S.flags[S.i]?"Unflag":"Flag"}</button>`}<span class="spacer"></span>
-      ${S.i<S.items.length-1?`<button id="bNext" class="primary">Next</button>`:`<button id="bSubmit" class="primary">Submit exam</button>`}`
+      ${!strict&&!checked?`<button id="bCheck" class="primary" ${complete(q,sel)?"":"disabled"}>Check</button>`:""}
+      ${S.i<S.items.length-1?`<button id="bNext" class="${!strict&&!checked?"":"primary"}">Next</button>`:`<button id="bSubmit" class="${!strict&&!checked?"":"primary"}">Submit exam</button>`}`
     :`${Object.keys(S.checked).length?`<button id="bEnd">End &amp; score</button>`:""}<span class="spacer"></span>${checked?(S.i<S.items.length-1?`<button id="bNext" class="primary">Next</button>`:`<button id="bFinish" class="primary">Finish</button>`):`<button id="bCheck" class="primary" ${complete(q,sel)?"":"disabled"}>Check</button>`}`}
   </div>
   ${exam&&!strict?`<div class="card small"><div class="row"><span class="muted">${answered} answered &middot; ${Object.values(S.flags).filter(Boolean).length} flagged</span><span class="spacer"></span><button id="bSub2">Submit</button></div>
@@ -808,7 +809,7 @@ function renderQuestion(){
   if($("#bNext")) $("#bNext").onclick=()=>{ if(strict&&!complete(q,sel)) showModal("You can't come back to this question. Move on without a full answer?",[["Stay",closeModal],["Move on",()=>{closeModal();go(S.i+1);}]]); else go(S.i+1); };
   if($("#bPrev")) $("#bPrev").onclick=()=>go(S.i-1);
   if($("#bFlag")) $("#bFlag").onclick=()=>{S.flags[S.i]=!S.flags[S.i];saveSession();renderQuestion();};
-  if($("#bCheck")) $("#bCheck").onclick=()=>{S.checked[S.i]=true; record(it.id,isRight(it.id,sel)); save(); saveSession(); renderQuestion();};
+  if($("#bCheck")) $("#bCheck").onclick=()=>{S.checked[S.i]=true; if(!exam){ record(it.id,isRight(it.id,sel)); save(); } saveSession(); renderQuestion();};
   if($("#bFinish")) $("#bFinish").onclick=finish;
   if($("#bEnd")) $("#bEnd").onclick=finish;
   const sub=()=>{ const un=strict?(complete(q,sel)?0:1):S.items.length-answered; showModal(un?`${un} question${un>1?"s are":" is"} unanswered. Submit anyway?`:"Submit your exam?",[["Keep going",closeModal],["Submit",()=>{closeModal();finish();}]]); };
