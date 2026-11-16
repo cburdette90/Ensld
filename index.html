@@ -84,6 +84,8 @@ textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,monospace;
 <div id="modal"></div>
 <script src="hard1.js"></script>
 <script src="hard2.js"></script>
+<script src="hard3.js"></script>
+<script src="hard4.js"></script>
 <script>
 const DOMAINS = {
   1:{name:"Advanced Addressing and Routing", w:25, n:15},
@@ -622,7 +624,7 @@ const BANK = [
 {id:"e50",d:5,q:"Which protocol is used by gNMI and model-driven telemetry for efficient transport?",o:["gRPC over HTTP/2","SNMP over UDP","Telnet","FTP"],a:[0],e:"gRPC uses HTTP/2 multiplexing and protobuf encoding. gNMI defines Capabilities, Get, Set, and Subscribe."}
 ];
 if(window.HARD) BANK.push(...window.HARD);
-const HARD_SHARE=0.6; // share of each domain in the full exam drawn from the hard set
+const HARD_SHARE=1; // share of each domain in the full exam drawn from the hard set (1 = all scenarios)
 
 // ---------- storage (fail-safe) ----------
 const KEY="ensld-practice-v1", SKEY="ensld-session-v1";
@@ -673,7 +675,7 @@ function startExam(){
   saveSession(); render();
 }
 function startMini(){
-  const ids=pick5(BANK.map(q=>q.id));
+  const ids=pick5(BANK.filter(q=>q.h).map(q=>q.id));
   S={mode:"exam",mini:true,strict:mem.strict!==false,items:ids.map(makeItem),i:0,ans:{},flags:{},checked:{},endAt:Date.now()+8*60*1000,title:"5-question test"};
   saveSession(); render();
 }
@@ -716,9 +718,9 @@ function renderHome(){
   <h1>ENSLD 300-420 Practice</h1>
   <p class="sub">Designing Cisco Enterprise Networks v1.1 &middot; ${BANK.length} questions (${BANK.filter(q=>q.h).length} hard scenarios) &middot; weighted to Cisco's blueprint</p>
   <div class="grid">
-    <button class="big primary" id="bExam"><b>Full practice exam</b><span style="color:inherit;opacity:.85">60 questions &middot; ${mem.strict!==false?"90 min":"study mode, no timer"} &middot; mostly hard scenarios${mem.strict!==false?" &middot; no going back":""}</span></button>
+    <button class="big primary" id="bExam"><b>Full practice exam</b><span style="color:inherit;opacity:.85">60 questions &middot; ${mem.strict!==false?"90 min":"study mode, no timer"} &middot; all hard scenarios${mem.strict!==false?" &middot; no going back":""}</span></button>
     <button class="big" id="bHard"><b>Hard scenarios</b><span>Design scenarios, choose-two, and drag-and-drop style matching</span></button>
-    <button class="big" id="bMini"><b>5-question test</b><span>${mem.strict!==false?"Timed (8 min), scored at the end":"No timer, answers as you go"}, unseen first</span></button>
+    <button class="big" id="bMini"><b>5-question test</b><span>${mem.strict!==false?"Timed (8 min), scored at the end":"No timer, answers as you go"}, hard scenarios only</span></button>
     <button class="big" id="bQuick"><b>Quick practice</b><span>${mem.size?mem.size+" questions":"Every question"}, unseen first, answers shown as you go</span></button>
     <button class="big" id="bMiss" ${m?"":"disabled"}><b>Missed questions</b><span>${m} to review${m&&mem.size&&m>mem.size?" &middot; "+mem.size+" at a time":""}</span></button>
   </div>
